@@ -1,30 +1,33 @@
 package main
 
 import (
-	"html/template"
-	"os"
+	"fmt"
+
+	"archazid.io/lenslocked/models"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-type User struct {
-	Name string
-	Bio  string
-	Age  int
-}
-
 func main() {
-	t, err := template.ParseFiles("hello.gohtml")
+	cfg := models.DefaultPostgresConfig()
+
+	db, err := models.Open(cfg)
 	if err != nil {
 		panic(err)
 	}
+	defer db.Close()
 
-	user := User{
-		Name: "John Smith",
-		Bio:  `<script>alert("Haha, you have been h4x0r3d!");</script>`,
-		Age:  123,
-	}
-
-	err = t.Execute(os.Stdout, user)
+	err = db.Ping()
 	if err != nil {
 		panic(err)
 	}
+	fmt.Println("Connected!")
+
+	us := models.UserService{
+		DB: db,
+	}
+	user, err := us.Create("bob@bob.com", "bob123")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(user)
 }
