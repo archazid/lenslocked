@@ -9,6 +9,7 @@ import (
 	"archazid.io/lenslocked/templates"
 	"archazid.io/lenslocked/views"
 	"github.com/go-chi/chi/v5"
+	"github.com/gorilla/csrf"
 )
 
 func main() {
@@ -47,11 +48,20 @@ func main() {
 	r.Post("/users/create/", usersC.Create)
 	r.Get("/users/signin/", usersC.SignIn)
 	r.Post("/users/auth/", usersC.Authenticate)
+	r.Get("/users/me/", usersC.CurrentUser)
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Page not found", http.StatusNotFound)
 	})
 
+	// CSRF middleware for CSRF protection
+	csrfKey := "gFvi45R4fy5xNBlnEeZtQbfAVCYEIAUX"
+	csrfMw := csrf.Protect(
+		[]byte(csrfKey),
+		// TODO: Fix this before deploying
+		csrf.Secure(false),
+	)
+
 	fmt.Println("Starting the server on :3000...")
-	http.ListenAndServe(":3000", r)
+	http.ListenAndServe(":3000", csrfMw(r))
 }

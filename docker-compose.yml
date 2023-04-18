@@ -4,6 +4,8 @@ services:
   db:
     image: postgres
     restart: always
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
     environment:
       - POSTGRES_DB=lenslocked
       - POSTGRES_USER=archazid

@@ -48,6 +48,7 @@ func (us *UserService) Create(email, password string) (*User, error) {
 	return &user, nil
 }
 
+// Authentication method for user sign in
 func (us UserService) Authenticate(email, password string) (*User, error) {
 	email = strings.ToLower(email)
 	user := User{
