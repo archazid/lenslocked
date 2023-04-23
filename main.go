@@ -34,10 +34,14 @@ func main() {
 	userService := models.UserService{
 		DB: db,
 	}
+	sessionService := models.SessionService{
+		DB: db,
+	}
 
 	// Setup our controllers
 	usersC := controllers.Users{
-		UserService: &userService,
+		UserService:    &userService,
+		SessionService: &sessionService,
 	}
 
 	usersC.Templates.New = views.Must(views.ParseFS(
@@ -49,6 +53,7 @@ func main() {
 	r.Get("/users/signin/", usersC.SignIn)
 	r.Post("/users/auth/", usersC.Authenticate)
 	r.Get("/users/me/", usersC.CurrentUser)
+	r.Post("/users/signout/", usersC.SignOut)
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Page not found", http.StatusNotFound)
