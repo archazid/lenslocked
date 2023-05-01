@@ -5,10 +5,13 @@ services:
     image: postgres
     restart: always
     volumes:
-      - ./data/db:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
     environment:
       - POSTGRES_DB=lenslocked
       - POSTGRES_USER=archazid
       - POSTGRES_PASSWORD=supersecretpassword
     ports:
       - "5432:5432"
+
+volumes:
+  pgdata:

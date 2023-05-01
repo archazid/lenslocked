@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"archazid.io/lenslocked/controllers"
+	"archazid.io/lenslocked/migrations"
 	"archazid.io/lenslocked/models"
 	"archazid.io/lenslocked/templates"
 	"archazid.io/lenslocked/views"
@@ -29,6 +30,12 @@ func main() {
 		panic(err)
 	}
 	defer db.Close()
+
+	// Database migrations
+	err = models.MigrateFS(db, migrations.FS, ".")
+	if err != nil {
+		panic(err)
+	}
 
 	// Setup our model services
 	userService := models.UserService{
