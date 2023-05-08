@@ -1,33 +1,21 @@
 package main
 
 import (
+	stdctx "context"
 	"fmt"
 
+	"archazid.io/lenslocked/context"
 	"archazid.io/lenslocked/models"
-	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 func main() {
-	cfg := models.DefaultPostgresConfig()
+	ctx := stdctx.Background()
 
-	db, err := models.Open(cfg)
-	if err != nil {
-		panic(err)
+	user := models.User{
+		Email: "zahid@archazid.io",
 	}
-	defer db.Close()
+	ctx = context.WithUser(ctx, &user)
 
-	err = db.Ping()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("Connected!")
-
-	us := models.UserService{
-		DB: db,
-	}
-	user, err := us.Create("bob@bob.com", "bob123")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(user)
+	retrievedUser := context.User(ctx)
+	fmt.Println(retrievedUser.Email)
 }

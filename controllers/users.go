@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"archazid.io/lenslocked/context"
 	"archazid.io/lenslocked/models"
 )
 
@@ -38,11 +39,11 @@ func (u Users) Create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println(err)
 		// TODO: Long term, we should show a warning about not being able to sign in.
-		http.Redirect(w, r, "/users/signin/", http.StatusFound)
+		http.Redirect(w, r, "/signin", http.StatusFound)
 		return
 	}
 	setCookie(w, CookieSession, session.Token)
-	http.Redirect(w, r, "/users/me/", http.StatusFound)
+	http.Redirect(w, r, "/users/me", http.StatusFound)
 }
 
 func (u Users) SignIn(w http.ResponseWriter, r *http.Request) {
@@ -53,7 +54,7 @@ func (u Users) SignIn(w http.ResponseWriter, r *http.Request) {
 	u.Templates.SignIn.Execute(w, r, data)
 }
 
-func (u Users) Authenticate(w http.ResponseWriter, r *http.Request) {
+func (u Users) ProcessSignIn(w http.ResponseWriter, r *http.Request) {
 	var data struct {
 		Email    string
 		Password string
@@ -74,13 +75,13 @@ func (u Users) Authenticate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	setCookie(w, CookieSession, session.Token)
-	http.Redirect(w, r, "/users/me/", http.StatusFound)
+	http.Redirect(w, r, "/users/me", http.StatusFound)
 }
 
-func (u Users) SignOut(w http.ResponseWriter, r *http.Request) {
+func (u Users) ProcessSignOut(w http.ResponseWriter, r *http.Request) {
 	token, err := readCookie(r, CookieSession)
 	if err != nil {
-		http.Redirect(w, r, "/users/signin/", http.StatusFound)
+		http.Redirect(w, r, "/signin", http.StatusFound)
 		return
 	}
 	err = u.SessionService.Delete(token)
@@ -90,21 +91,10 @@ func (u Users) SignOut(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	deleteCookie(w, CookieSession)
-	http.Redirect(w, r, "/users/signin/", http.StatusFound)
+	http.Redirect(w, r, "/signin", http.StatusFound)
 }
 
 func (u Users) CurrentUser(w http.ResponseWriter, r *http.Request) {
-	token, err := readCookie(r, CookieSession)
-	if err != nil {
-		fmt.Println(err)
-		http.Redirect(w, r, "/users/signin/", http.StatusFound)
-		return
-	}
-	user, err := u.SessionService.User(token)
-	if err != nil {
-		fmt.Println(err)
-		http.Redirect(w, r, "/users/signin/", http.StatusFound)
-		return
-	}
+	user := context.User(r.Context())
 	fmt.Fprintf(w, "Current user: %s\n", user.Email)
 }

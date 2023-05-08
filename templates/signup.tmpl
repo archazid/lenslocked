@@ -4,7 +4,7 @@
     <h1 class="pt-4 pb-8 text-center text-3xl font-bold text-gray-900">
       Start sharing your photos today!
     </h1>
-    <form action="/users/create/" method="post">
+    <form action="/users" method="post">
       <div class="hidden">
         {{csrfField}}
       </div>
@@ -29,10 +29,10 @@
       </div>
       <div class="py-2 w-full flex justify-between">
         <p class="text-xs text-gray-500">
-          Already have an account? <a href="/users/signin/" class="underline">Sign in</a>
+          Already have an account? <a href="/signin" class="underline">Sign in</a>
         </p>
         <p class="text-xs text-gray-500">
-          <a href="/reset-pw/" class="underline">Forgot your password?</a>
+          <a href="/reset-pw" class="underline">Forgot your password?</a>
         </p>
       </div>
     </form>
