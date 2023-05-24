@@ -49,7 +49,7 @@ func (us *UserService) Create(email, password string) (*User, error) {
 }
 
 // Authentication method for user sign in
-func (us UserService) Authenticate(email, password string) (*User, error) {
+func (us *UserService) Authenticate(email, password string) (*User, error) {
 	email = strings.ToLower(email)
 	user := User{
 		Email: email,
@@ -68,5 +68,24 @@ func (us UserService) Authenticate(email, password string) (*User, error) {
 	if err != nil {
 		return nil, fmt.Errorf("authenticate: %w", err)
 	}
+
 	return &user, nil
+}
+
+func (us *UserService) UpdatePassword(userID int, password string) error {
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("update password: %w", err)
+	}
+	passwordHash := string(hashedBytes)
+	_, err = us.DB.Exec(`
+		UPDATE users
+		SET password_hash = $2
+		WHERE id = $1;
+	`, userID, passwordHash)
+	if err != nil {
+		return fmt.Errorf("update password: %w", err)
+	}
+
+	return nil
 }
