@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	"archazid.io/lenslocked/context"
+	"archazid.io/lenslocked/errors"
 	"archazid.io/lenslocked/models"
 )
 
@@ -42,8 +43,10 @@ func (u Users) ProcessSignUp(w http.ResponseWriter, r *http.Request) {
 
 	user, err := u.UserService.Create(data.Email, data.Password)
 	if err != nil {
-		fmt.Println(err)
-		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
+		if errors.Is(err, models.ErrEmailTaken) {
+			err = errors.Public(err, "That email address is already associated with an account.")
+		}
+		u.Templates.SignUp.Execute(w, r, data, err)
 		return
 	}
 	session, err := u.SessionService.Create(user.ID)
