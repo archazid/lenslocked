@@ -87,12 +87,16 @@ func main() {
 	pwResetService := &models.PasswordResetService{
 		DB: db,
 	}
+	galleryService := &models.GalleryService{
+		DB: db,
+	}
 
 	// Setup CSRF middleware
 	csrfMw := csrf.Protect(
 		[]byte(cfg.CSRF.Key),
 		// TODO: Fix this before deploying
 		csrf.Secure(cfg.CSRF.Secure),
+		csrf.Path("/"),
 	)
 	// Setup user middleware
 	umw := controllers.UserMiddleware{
@@ -107,15 +111,26 @@ func main() {
 		PasswordResetService: pwResetService,
 	}
 	usersC.Templates.SignUp = views.Must(views.ParseFS(
-		templates.FS, "base.tmpl", "signup.tmpl"))
+		templates.FS, "base.tmpl", "users/signup.tmpl"))
 	usersC.Templates.SignIn = views.Must(views.ParseFS(
-		templates.FS, "base.tmpl", "signin.tmpl"))
+		templates.FS, "base.tmpl", "users/signin.tmpl"))
 	usersC.Templates.CheckYourEmail = views.Must(views.ParseFS(
-		templates.FS, "base.tmpl", "check-your-email.tmpl"))
+		templates.FS, "base.tmpl", "users/check-your-email.tmpl"))
 	usersC.Templates.ForgotPassword = views.Must(views.ParseFS(
-		templates.FS, "base.tmpl", "forgot-pw.tmpl"))
+		templates.FS, "base.tmpl", "users/forgot-pw.tmpl"))
 	usersC.Templates.ResetPassword = views.Must(views.ParseFS(
-		templates.FS, "base.tmpl", "reset-pw.tmpl"))
+		templates.FS, "base.tmpl", "users/reset-pw.tmpl"))
+	galleriesC := controllers.Galleries{
+		GalleryService: galleryService,
+	}
+	galleriesC.Templates.Show = views.Must(views.ParseFS(
+		templates.FS, "base.tmpl", "galleries/show.tmpl"))
+	galleriesC.Templates.New = views.Must(views.ParseFS(
+		templates.FS, "base.tmpl", "galleries/new.tmpl"))
+	galleriesC.Templates.Edit = views.Must(views.ParseFS(
+		templates.FS, "base.tmpl", "galleries/edit.tmpl"))
+	galleriesC.Templates.Index = views.Must(views.ParseFS(
+		templates.FS, "base.tmpl", "galleries/index.tmpl"))
 
 	// Setup our router
 	r := chi.NewRouter()
@@ -131,6 +146,7 @@ func main() {
 	r.Get("/faq", controllers.FAQ(views.Must(
 		views.ParseFS(templates.FS, "base.tmpl", "faq.tmpl"))))
 
+	// Users
 	r.Get("/signup", usersC.SignUp)
 	r.Post("/signup", usersC.ProcessSignUp)
 	r.Get("/signin", usersC.SignIn)
@@ -143,6 +159,19 @@ func main() {
 	r.Route("/users/me", func(r chi.Router) {
 		r.Use(umw.RequireUser)
 		r.Get("/", usersC.CurrentUser)
+	})
+	// Galleries
+	r.Route("/galleries", func(r chi.Router) {
+		r.Get("/{id}", galleriesC.Show)
+		r.Group(func(r chi.Router) {
+			r.Use(umw.RequireUser)
+			r.Get("/new", galleriesC.New)
+			r.Post("/", galleriesC.Create)
+			r.Get("/{id}/edit", galleriesC.Edit)
+			r.Post("/{id}", galleriesC.Update)
+			r.Get("/me", galleriesC.Index)
+			r.Post("/{id}/delete", galleriesC.Delete)
+		})
 	})
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
