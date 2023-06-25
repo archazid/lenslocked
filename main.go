@@ -123,14 +123,14 @@ func main() {
 	galleriesC := controllers.Galleries{
 		GalleryService: galleryService,
 	}
-	galleriesC.Templates.Show = views.Must(views.ParseFS(
-		templates.FS, "base.tmpl", "galleries/show.tmpl"))
 	galleriesC.Templates.New = views.Must(views.ParseFS(
 		templates.FS, "base.tmpl", "galleries/new.tmpl"))
 	galleriesC.Templates.Edit = views.Must(views.ParseFS(
 		templates.FS, "base.tmpl", "galleries/edit.tmpl"))
 	galleriesC.Templates.Index = views.Must(views.ParseFS(
 		templates.FS, "base.tmpl", "galleries/index.tmpl"))
+	galleriesC.Templates.Show = views.Must(views.ParseFS(
+		templates.FS, "base.tmpl", "galleries/show.tmpl"))
 
 	// Setup our router
 	r := chi.NewRouter()
@@ -163,6 +163,7 @@ func main() {
 	// Galleries
 	r.Route("/galleries", func(r chi.Router) {
 		r.Get("/{id}", galleriesC.Show)
+		r.Get("/{id}/images/{filename}", galleriesC.Image)
 		r.Group(func(r chi.Router) {
 			r.Use(umw.RequireUser)
 			r.Get("/new", galleriesC.New)
@@ -171,6 +172,8 @@ func main() {
 			r.Post("/{id}", galleriesC.Update)
 			r.Get("/me", galleriesC.Index)
 			r.Post("/{id}/delete", galleriesC.Delete)
+			r.Post("/{id}/images", galleriesC.UploadImage)
+			r.Post("/{id}/images/{filename}/delete", galleriesC.DeleteImage)
 		})
 	})
 
